@@ -32,6 +32,7 @@ def date_to_datetime(date: str) -> datetime.datetime:
     except(ValueError):
         return datetime.datetime.strptime(date, "%Y-%m-%d")
 
+
 def moving_average(data_array: Iterable, window: int) -> np.array:
     """
     Calculate a moving average by convolving along a dataset.
@@ -45,6 +46,7 @@ def moving_average(data_array: Iterable, window: int) -> np.array:
     :rtype: np.array
     """
     return np.convolve(data_array, np.ones((window,))/window, mode="same")
+
 
 def binarise(data_array: Iterable, value) -> np.array:
     """
@@ -60,7 +62,8 @@ def binarise(data_array: Iterable, value) -> np.array:
               is equal to value.
     :rtype: np.array
     """
-    return np.array([int(x==value) for x in data_array])
+    return np.array([int(x == value) for x in data_array])
+
 
 def binarise_df(dataframe: pd.DataFrame,
                 value: str,
@@ -84,6 +87,7 @@ def binarise_df(dataframe: pd.DataFrame,
     dataframe[value] = binarise(dataframe[column], value)
     return dataframe
 
+
 def add_day(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
     Add a column to a dataframe containing only the day of the date.
@@ -96,6 +100,7 @@ def add_day(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
     dataframe['day'] = dataframe['date'].str.slice(0, 10)
     return dataframe
+
 
 def plot_percentage_by_date(data: pd.DataFrame, window: int=10000) -> None:
     """
@@ -115,22 +120,39 @@ def plot_percentage_by_date(data: pd.DataFrame, window: int=10000) -> None:
     """
     data = add_day(data)
     data = data.sort_values(by='day')
-    opens  = moving_average(binarise_df(data, "Opened"      , "status").groupby("day", as_index=False)['Opened'].mean()['Opened'], window)
-    errors = moving_average(binarise_df(data, "Error"       , "status").groupby("day", as_index=False)['Error'].mean()['Error'], window)
-    clicks = moving_average(binarise_df(data, "Clicked"     , "status").groupby("day", as_index=False)['Clicked'].mean()['Clicked'], window)
-    unsubs = moving_average(binarise_df(data, "Unsubscribed", "status").groupby("day", as_index=False)['Unsubscribed'].mean()['Unsubscribed'], window)
+    opens = moving_average(binarise_df(data, "Opened", "status")
+                           .groupby("day", as_index=False)['Opened']
+                           .mean()['Opened'],
+                           window)
+    errors = moving_average(binarise_df(data, "Error", "status")
+                            .groupby("day", as_index=False)['Error']
+                            .mean()['Error'],
+                            window)
+    clicks = moving_average(binarise_df(data, "Clicked", "status")
+                            .groupby("day", as_index=False)['Clicked']
+                            .mean()['Clicked'],
+                            window)
+    unsubs = moving_average(binarise_df(data, "Unsubscribed", "status")
+                            .groupby("day", as_index=False)['Unsubscribed']
+                            .mean()['Unsubscribed'],
+                            window)
 
-    time = sorted(dates.date2num([date_to_datetime(d) for d in set(data['day'])]))
+    time = sorted(dates.date2num([date_to_datetime(d)
+                                  for d in set(data['day'])]))
 
     plt.plot_date(time, opens, label="Opens", fmt='-')
     plt.plot_date(time, errors, label="Errors", fmt='-')
     plt.plot_date(time, clicks, label="Clicks", fmt='-')
     plt.plot_date(time, unsubs, label="Unsubs", fmt='-')
-    
+
     plt.legend()
     plt.show()
 
-def get_interactions(data: pd.DataFrame, interaction_type: str, window: int=10000) -> np.array:
+
+def get_interactions(data: pd.DataFrame,
+                     interaction_type: str,
+                     window: int=10000
+                     ) -> np.array:
     """
     Get a moving average of an interaction type over time.
 
@@ -148,7 +170,11 @@ def get_interactions(data: pd.DataFrame, interaction_type: str, window: int=1000
     """
     data = add_day(data)
     data = data.sort_values(by='day')
-    return moving_average(binarise_df(data, interaction_type, "status").groupby("day", as_index=False)[interaction_type].mean()[interaction_type], window)
+    return moving_average(binarise_df(data, interaction_type, "status")
+                          .groupby("day", as_index=False)[interaction_type]
+                          .mean()[interaction_type],
+                          window)
+
 
 def get_times(data: pd.DataFrame) -> np.array:
     """
@@ -163,4 +189,5 @@ def get_times(data: pd.DataFrame) -> np.array:
     """
     data = add_day(data)
     data = data.sort_values(by='day')
-    return sorted(dates.date2num([date_to_datetime(d) for d in set(data['day'])]))
+    return sorted(dates.date2num([date_to_datetime(d)
+                                  for d in set(data['day'])]))
